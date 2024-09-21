@@ -181,9 +181,147 @@
             outline: 2px solid var(--primary-color);
             outline-offset: 2px;
         }
+
+        /* 搜索框样式 */
+        .search-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .search-box {
+            width: 40px;
+            padding: 10px 30px 10px 10px;
+            border: none;
+            border-radius: 20px;
+            background-color: var(--card-background);
+            transition: all 0.3s ease;
+            font-size: 16px;
+        }
+        .search-box:focus {
+            width: 200px;
+            outline: none;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .search-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-color);
+            transition: opacity 0.3s ease;
+        }
+        .search-box:focus + .search-icon {
+            opacity: 0;
+        }
+        .search-results {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 200px;
+            background-color: var(--card-background);
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .search-results.show {
+            display: block;
+            opacity: 1;
+        }
+        .search-history-title {
+            padding: 10px;
+            font-weight: bold;
+            color: #333;
+            border-bottom: 1px solid #eee;
+        }
+        .search-history-item {
+            padding: 8px 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .search-history-item:hover {
+            background-color: #f0f0f0;
+        }
+        .delete-history {
+            color: #ff0000;
+            cursor: pointer;
+        }
+
+        /* 模态窗口样式 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #333;
+        }
+        .close:hover {
+            color: #ff0000;
+        }
+        .modal-content h2 {
+            margin-top: 0;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+        }
+        .modal-content pre {
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .modal-content ul,
+        .modal-content ol {
+            margin-left: 20px;
+        }
+        .modal-content code {
+            background-color: #f0f0f0;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
     </style>
 </head>
 <body>
+    <!-- 将搜索框移到 main-card 外部 -->
+    <div class="search-container">
+        <input type="text" class="search-box" placeholder="搜索...">
+        <span class="search-icon">🔍</span>
+        <div class="search-results"></div>
+    </div>
+
     <div class="main-card">
         <div class="container">
             <!-- SVG图形开始 -->
@@ -419,6 +557,156 @@
         svg.addEventListener('mousedown', (e) => {
             e.preventDefault();
         });
+
+        const searchBox = document.querySelector('.search-box');
+        const searchResults = document.querySelector('.search-results');
+        let searchHistory = [];
+
+        searchBox.addEventListener('focus', () => {
+            searchBox.style.width = '200px';
+            displaySearchHistory();
+        });
+
+        searchBox.addEventListener('blur', () => {
+            if (searchBox.value === '') {
+                searchBox.style.width = '40px';
+            }
+            setTimeout(() => {
+                searchResults.classList.remove('show');
+            }, 200);
+        });
+
+        searchBox.addEventListener('input', () => {
+            const searchTerm = searchBox.value.toLowerCase();
+            if (searchTerm === '') {
+                displaySearchHistory();
+            } else {
+                const results = questions.filter(q => 
+                    q.title.toLowerCase().includes(searchTerm) || 
+                    q.content.toLowerCase().includes(searchTerm)
+                );
+                displaySearchResults(results);
+            }
+        });
+
+        function displaySearchHistory() {
+            searchResults.innerHTML = '<div class="search-history-title">搜索记录</div>';
+            searchHistory.slice(0, 5).forEach(item => {
+                const historyItem = createHistoryItem(item);
+                searchResults.appendChild(historyItem);
+            });
+            searchResults.classList.add('show');
+        }
+
+        function createHistoryItem(item) {
+            const historyItem = document.createElement('div');
+            historyItem.className = 'search-history-item';
+            historyItem.innerHTML = `
+                <span>${item}</span>
+                <span class="delete-history">&times;</span>
+            `;
+            historyItem.querySelector('span:first-child').addEventListener('click', () => {
+                searchBox.value = item;
+                searchBox.dispatchEvent(new Event('input'));
+            });
+            historyItem.querySelector('.delete-history').addEventListener('click', (e) => {
+                e.stopPropagation();
+                searchHistory = searchHistory.filter(h => h !== item);
+                displaySearchHistory();
+            });
+            return historyItem;
+        }
+
+        function displaySearchResults(results) {
+            searchResults.innerHTML = '';
+            if (results.length === 0) {
+                searchResults.innerHTML = '<div class="no-results">没有找到相关问题</div>';
+            } else {
+                results.forEach(result => {
+                    const resultItem = document.createElement('div');
+                    resultItem.textContent = result.title;
+                    resultItem.className = 'search-result-item';
+                    resultItem.addEventListener('click', () => {
+                        showModal(result.title, result.content);
+                        addToSearchHistory(result.title);
+                    });
+                    searchResults.appendChild(resultItem);
+                });
+            }
+            searchResults.classList.add('show');
+        }
+
+        function addToSearchHistory(item) {
+            searchHistory = searchHistory.filter(h => h !== item);
+            searchHistory.unshift(item);
+            if (searchHistory.length > 5) {
+                searchHistory.pop();
+            }
+        }
+
+        function showModal(title, content) {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h2>${title}</h2>
+                    <pre>${content}</pre>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            const closeBtn = modal.querySelector('.close');
+            closeBtn.addEventListener('click', () => {
+                document.body.removeChild(modal);
+            });
+
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    document.body.removeChild(modal);
+                }
+            });
+        }
+
+        // 使用 question.md 中的内容作为问题数据
+        const questions = [
+            { 
+                title: '合并不相关历史的分支', 
+                content: '<h3>问题</h3><p>尝试合并分支时遇到 "refusing to merge unrelated histories" 错误。</p><h3>详细解决步骤</h3><ol><li>确保你在正确的分支上：<pre><code>git checkout main</code></pre></li><li>拉取最新的远程更改：<pre><code>git fetch origin</code></pre></li><li>使用 <code>--allow-unrelated-histories</code> 选项强制合并：<pre><code>git merge origin/dev --allow-unrelated-histories</code></pre></li><li>如果出现冲突，解决冲突：<ul><li>打开冲突文件，查找 <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code>, <code>=======</code>, 和 <code>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</code> 标记</li><li>手动编辑文件解决冲突</li><li>使用 <code>git add</code> 标记冲突已解决</li></ul></li><li>完成合并：<pre><code>git commit -m "Merge dev branch, combining unrelated histories"</code></pre></li><li>推送合并结果到远程仓库：<pre><code>git push origin main</code></pre></li></ol>'
+            },
+            { 
+                title: '创建和推送新的实验性分支',
+                content: '<h3>详细解决步骤</h3><ol><li>确保你在最新的主分支上：<pre><code>git checkout main\ngit pull origin main</code></pre></li><li>创建并切换到新的实验性分支：<pre><code>git checkout -b feature-experiment</code></pre></li><li>在新分支上进行更改，例如修改 <code>实验性功能.html</code>：<pre><code>vim 实验性功能.html\n# 进行必要的编辑</code></pre></li><li>添加更改到暂存区：<pre><code>git add 实验性功能.html</code></pre></li><li>提交更改：<pre><code>git commit -m "Add new experimental feature"</code></pre></li><li>推送新分支到远程仓库：<pre><code>git push -u origin feature-experiment</code></pre></li></ol>'
+            },
+            {
+                title: '理解 git push 中的 -u 选项',
+                content: '<h3>详细解决解释</h3><ul><li><code>-u</code> 是 <code>--set-upstream</code> 的简写</li><li>它的作用是：<ol><li>推送本地分支到远程仓库</li><li>建立本地分支和远程分支之间的跟踪关系</li><li>设置远程分支为本地分支的上游（upstream）</li></ol></li><li>使用示例：<pre><code>git push -u origin feature-experiment</code></pre></li><li>设置后，以后可以直接使用：<pre><code>git push\ngit pull</code></pre></li></ul>'
+            },
+            {
+                title: '创建 Pull Request (PR)',
+                content: '<h3>详细步骤</h3><ol><li>在 GitHub 仓库页面，点击 "Compare & pull request" 按钮</li><li>在 PR 创建页面：<ul><li>选择基础分支（通常是 main）和比较分支（feature-experiment）</li><li>填写 PR 标题，例如："Add experimental feature for improved user interaction"</li><li>在描述框中详细说明更改内容，例如：<pre><code>This PR introduces a new experimental feature in `实验性功能.html`:\n- Adds interactive chart using D3.js\n- Improves user engagement with real-time data updates\n- Updates `设计要素.md` to reflect new UI elements\n\nTesting steps:\n1. Open `实验性功能.html`\n2. Interact with the new chart\n3. Verify real-time updates are working correctly\n\nRelated to issue #123</code></pre></li></ul></li><li>选择审阅者（如果知道谁应该审阅）</li><li>如果这是一个进行中的工作，可以标记为 "Draft"</li><li>点击 "Create pull request" 按钮创建 PR</li></ol>'
+            },
+            {
+                title: '理解 PR 描述的重要性',
+                content: '<h3>详细指南</h3><ol><li>PR 描述的结构：<ul><li>标题：简洁明了地概括更改</li><li>背景：解释为什么需要这个更改</li><li>更改内容：列出主要的代码更改</li><li>实现细节：简要解释如何实现新功能或修复</li><li>测试步骤：提供如何测试这些更改的指南</li><li>相关问题：链接到相关的 issue 或其他 PR</li></ul></li><li>使用 Markdown 格式化：<pre><code>## 背景\n我们需要改进用户交互体验，特别是在数据可视化方面。\n\n## 更改内容\n- 在 `实验性功能.html` 中添加了交互式图表\n- 更新了 `设计要素.md` 以反映新的 UI 元素\n\n## 实现细节\n使用 D3.js 库实现了实时数据更新的交互式图表。\n\n## 测试步骤\n1. 打开 `实验性功能.html`\n2. 点击图表上的数据点\n3. 验证数据更新是否正确显示\n\nCloses #123</code></pre></li></ol>'
+            },
+            {
+                title: '处理 PR 审核要求',
+                content: '<h3>详细步骤</h3><ol><li>检查需要哪些人审阅 PR</li><li>等待指定审阅者的审核</li><li>准备回答问题或进行必要的修改</li><li>获得所有必要批准后，可以进行合并</li></ol>'
+            },
+            {
+                title: '管理多个HTML版本和设计文档',
+                content: '<h3>详细指南</h3><ol><li>使用语义化版本号命名主要版本</li><li>为每个主要版本创建分支</li><li>保持设计文档（<code>设计要素.md</code>、<code>设计.md</code>）与代码同步更新</li><li>使用功能分支开发新功能，如 <code>实验性功能.html</code></li><li>通过PR将功能分支合并到开发分支</li></ol>'
+            },
+            {
+                title: '使用 Git 进行协作开发',
+                content: '<h3>详细指南</h3><ol><li>保持 <code>README.md</code> 和 <code>git-workflow.html</code> 更新</li><li>使用Issue跟踪任务</li><li>实施代码审查流程</li><li>设置分支保护规则</li><li>定期同步和更新分支</li></ol>'
+            },
+            {
+                title: 'Cursor 编辑器中 Composer 悬浮窗大小调整问题',
+                content: '<h3>问题</h3><p>在 Cursor 编辑器中，Composer 的悬浮窗不能调节上下大小。</p><h3>解决方案</h3><p>目前，Cursor 编辑器的 Composer 悬浮窗确实不支持直接调整上下大小，也不能分离为独立窗口。但有一些替代方法可以改善使用体验：</p><ol><li>使用滚动：<ul><li>虽然窗口大小固定，但你可以在窗口内滚动查看更多内容。</li></ul></li><li>调整字体大小：<ul><li>在 Cursor 设置中调整 Composer 的字体大小，可以在固定空间内显示更多或更少的内容。</li></ul></li><li>使用快捷键切换视图：<ul><li>使用 Ctrl+Shift+P (Windows/Linux) 或 Cmd+Shift+P (Mac) 打开命令面板。</li><li>输入 "Toggle Composer" 来快速隐藏或显示 Composer 窗口。</li></ul></li><li>利用多面板布局：<ul><li>Cursor 支持多面板布局。你可以打开一个新的编辑器面板，将其专门用于 Composer 输出。</li><li>使用 Ctrl+\\ (Windows/Linux) 或 Cmd+\\ (Mac) 来分割编辑器。</li></ul></li><li>反馈给开发团队：<ul><li>向 Cursor 开发团队提交功能请求，建议添加调整 Composer 悬浮窗大小的功能。</li></ul></li><li>临时替代方案：<ul><li>对于长文本，可以先在 Composer 中编写，然后复制到主编辑区进行进一步编辑。</li></ul></li><li>使用外部编辑器：<ul><li>对于需要更大编辑空间的内容，考虑在外部文本编辑器中编写，然后复制回 Cursor。</li></ul></li></ol><h3>注意事项</h3><ul><li>定期检查 Cursor 的更新，这个功能限制可能在未来的版本中得到改善。</li><li>熟悉 Cursor 的其他功能和快捷键，可能会发现其他提高效率的方法。</li><li>考虑调整工作流程，以适应当前的界面限制，同时保持生产力。</li></ul><p>虽然这不是一个直接的解决方案，但这些建议可以帮助你在当前版本的 Cursor 中更有效地使用 Composer 功能。记得经常查看 Cursor 的更新日志，以了解是否有新的功能或改进。</p>'
+            }
+        ];
     </script>
 </body>
 </html>
