@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git工作流程图</title>
+    <style>
+        /* 定义全局变量 */
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --background-color: #f0f4f8;
+            --text-color: #34495e;
+            --card-background: #ffffff;
+            --card-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        /* 基本页面样式 */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        /* 主卡片样式 */
+        .main-card {
+            background: var(--card-background);
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+            padding: 30px;
+            max-width: 1000px;
+            width: 90%;
+            transition: all 0.3s ease;
+        }
+        .main-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+
+        /* SVG容器样式 */
+        .container {
+            width: 100%;
+        }
+        svg {
+            width: 100%;
+            height: auto;
+            max-height: 70vh;
+        }
+
+        /* 组件样式 */
+        .component {
+            stroke: #000;
+            stroke-width: 2;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .component:hover {
+            filter: brightness(1.1);
+            transform: scale(1.05);
+        }
+        .remote { fill: #E6F3FF; }
+        .repository { fill: #FFE6E6; }
+        .index { fill: #E6FFE6; }
+        .workspace { fill: #FFFACD; }
+
+        /* 箭头样式 */
+        .arrow {
+            fill: none;
+            stroke: #666;
+            stroke-width: 1.5;
+            marker-end: url(#arrowhead);
+            transition: stroke 0.3s;
+        }
+        .arrow:hover { stroke: var(--primary-color); }
+
+        /* 标签样式 */
+        .label {
+            font-size: 12px;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.3s ease;
+        }
+        .label:hover {
+            font-weight: bold;
+            fill: var(--primary-color);
+        }
+
+        /* 信息卡片样式 */
+        .info-card {
+            position: absolute;
+            background: var(--card-background);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: var(--card-shadow);
+            display: none;
+            max-width: 300px;
+            width: 90%;
+            z-index: 10;
+            transition: all 0.3s ease;
+        }
+        .info-card h3 { 
+            margin-top: 0; 
+            color: var(--primary-color);
+        }
+        .info-card p { margin-bottom: 10px; }
+        .info-card pre {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 600px) {
+            .main-card { padding: 20px; }
+        }
+
+        /* 组件标签样式 */
+        .component-label {
+            font-family: 'Arial', 'Helvetica', sans-serif;
+            font-size: 16px;
+            font-weight: 400;
+            fill: #2c3e50;
+            stroke: #ffffff;
+            stroke-width: 0.5px;
+            paint-order: stroke;
+            pointer-events: none;
+            text-anchor: middle;
+        }
+        .remote .component-label,
+        .repository .component-label,
+        .index .component-label,
+        .workspace .component-label {
+            fill: #333333;
+        }
+
+        /* 组件信息卡片样式 */
+        .component-info {
+            position: absolute;
+            background: var(--card-background);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: var(--card-shadow);
+            max-width: 250px;
+            width: 90%;
+            z-index: 10;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s, visibility 0.2s;
+        }
+        .component-info.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .component-info h3 {
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+        .component-info p {
+            margin-bottom: 0;
+        }
+
+        /* 添加以下样式来移除焦点时的轮廓 */
+        .component:focus,
+        .label:focus {
+            outline: none;
+        }
+
+        /* 添加以下样式来移除 SVG 的焦点轮廓 */
+        svg:focus {
+            outline: none;
+        }
+
+        /* 为了保持可访问性，我们可以添加一个自定义的焦点样式 */
+        svg:focus-visible {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-card">
+        <div class="container">
+            <!-- SVG图形开始 -->
+            <svg viewBox="0 0 800 300" role="img">
+                <defs>
+                    <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                        <polygon points="0 0, 8 3, 0 6" fill="#666" />
+                    </marker>
+                </defs>
+                
+                <!-- Remote组件 -->
+                <g class="component remote" data-component="remote">
+                    <path d="M20,90 Q70,60 120,90 V210 Q70,240 20,210 V90 Z" />
+                    <ellipse cx="70" cy="90" rx="50" ry="20" />
+                    <text class="component-label" x="70" y="160" dominant-baseline="middle">Remote</text>
+                </g>
+                
+                <!-- Repository组件 -->
+                <g class="component repository" data-component="repository">
+                    <path d="M220,100 Q260,75 300,100 V200 Q260,225 220,200 V100 Z" />
+                    <ellipse cx="260" cy="100" rx="40" ry="15" />
+                    <text class="component-label" x="260" y="160" dominant-baseline="middle">Repository</text>
+                </g>
+                
+                <!-- Index组件 -->
+                <g class="component index" data-component="index">
+                    <path d="M420,130 Q450,120 480,130 V170 Q450,180 420,170 V130 Z" />
+                    <ellipse cx="450" cy="130" rx="30" ry="8" />
+                    <text class="component-label" x="450" y="160" dominant-baseline="middle">Index</text>
+                </g>
+                
+                <!-- Workspace组件 -->
+                <g class="component workspace" data-component="workspace">
+                    <path d="M620,100 H720 V190 Q705,200 690,190 Q675,180 660,190 Q645,200 630,190 Q615,180 620,190 V100 Z" />
+                    <text class="component-label" x="670" y="160" dominant-baseline="middle">Workspace</text>
+                </g>
+                
+                <!-- 各种操作的箭头和标签 -->
+                <path class="arrow" d="M130 140 H210" />
+                <text class="label" x="170" y="130" text-anchor="middle" data-operation="fetch">fetch/clone</text>
+                
+                <path class="arrow" d="M420 150 H310" />
+                <text class="label" x="365" y="165" text-anchor="middle" data-operation="commit">commit</text>
+                
+                <path class="arrow" d="M300 120 Q440 80 610 120" />
+                <text class="label" x="450" y="95" text-anchor="middle" data-operation="checkout">checkout</text>
+                
+                <path class="arrow" d="M610 150 H490" />
+                <text class="label" x="550" y="165" text-anchor="middle" data-operation="add">add</text>
+                
+                <path class="arrow" d="M210 170 H130" />
+                <text class="label" x="170" y="190" text-anchor="middle" data-operation="push">push</text>
+                
+                <!-- pull操作的箭头和标签 -->
+                <path class="arrow" d="M120 80 Q260 30 610 100" />
+                <text class="label" x="260" y="50" text-anchor="middle" data-operation="pull">pull</text>
+            </svg>
+        </div>
+        <!-- 操作信息卡片 -->
+        <div id="info-card" class="info-card">
+            <h3 id="card-title"></h3>
+            <p id="card-description"></p>
+            <pre id="card-example"></pre>
+        </div>
+        <!-- 组件信息卡片 -->
+        <div id="component-info" class="component-info">
+            <h3 id="component-title"></h3>
+            <p id="component-description"></p>
+        </div>
+    </div>
+    <script>
+        // 定义Git操作及其描述
+        const operations = {
+            fetch: {
+                name: "Fetch/Clone",
+                description: "从远程仓库获取最新的代码",
+                example: "git fetch 或 git clone <url>"
+            },
+            checkout: {
+                name: "Checkout",
+                description: "切换分支或恢复工作区文件",
+                example: "git checkout <branch>"
+            },
+            add: {
+                name: "Add",
+                description: "将文件添加到暂存区",
+                example: "git add <file>"
+            },
+            commit: {
+                name: "Commit",
+                description: "将暂存区的改动提交到本地仓库",
+                example: "git commit -m '提交信息'"
+            },
+            push: {
+                name: "Push",
+                description: "将本地的提交推送到远程仓库",
+                example: "git push origin <branch>"
+            },
+            pull: {
+                name: "Pull",
+                description: "从远程仓库拉取并合并到本地",
+                example: "git pull origin <branch>"
+            }
+        };
+
+        // 获取DOM元素
+        const infoCard = document.getElementById('info-card');
+        const svg = document.querySelector('svg');
+        const labels = svg.querySelectorAll('.label');
+
+        // 显示操作信息卡片
+        function showInfoCard(e) {
+            const operation = e.target.dataset.operation;
+            const info = operations[operation];
+            document.getElementById('card-title').textContent = info.name;
+            document.getElementById('card-description').textContent = info.description;
+            document.getElementById('card-example').textContent = info.example;
+            infoCard.style.display = 'block';
+
+            // 计算卡片位置
+            const rect = e.target.getBoundingClientRect();
+            const mainCard = document.querySelector('.main-card');
+            const mainCardRect = mainCard.getBoundingClientRect();
+
+            infoCard.style.top = `${rect.bottom - mainCardRect.top + 10}px`;
+            infoCard.style.left = `${rect.left - mainCardRect.left}px`;
+        }
+
+        // 隐藏操作信息卡片
+        function hideInfoCard() {
+            infoCard.style.display = 'none';
+        }
+
+        // 为每个标签添加鼠标事件监听器
+        labels.forEach(label => {
+            label.addEventListener('mouseenter', showInfoCard);
+            label.addEventListener('mouseleave', hideInfoCard);
+        });
+
+        // 定义组件信息
+        const componentInfo = {
+            remote: {
+                name: "远程仓库 (Remote)",
+                description: "存储在远程服务器上的项目版本,可以与多人共享和协作。"
+            },
+            repository: {
+                name: "本地仓库 (Repository)",
+                description: "存储在本地的项目版本,包含完整的版本历史和分支信息。"
+            },
+            index: {
+                name: "暂存区 (Index/Stage)",
+                description: "准备提交到本地仓库的文件修改集合,是工作区和本地仓库的中间层。"
+            },
+            workspace: {
+                name: "工作区 (Workspace)",
+                description: "当前正在进行开发和修改的项目文件所在的目录。"
+            }
+        };
+
+        // 获取组件信息卡片和所有组件元素
+        const componentInfoCard = document.getElementById('component-info');
+        const components = svg.querySelectorAll('.component');
+
+        // 显示组件信息卡片
+        function showComponentInfo(e) {
+            const component = e.currentTarget.dataset.component;
+            const info = componentInfo[component];
+            document.getElementById('component-title').textContent = info.name;
+            document.getElementById('component-description').textContent = info.description;
+            
+            // 计算卡片位置
+            const rect = e.currentTarget.getBoundingClientRect();
+            const mainCard = document.querySelector('.main-card');
+            const mainCardRect = mainCard.getBoundingClientRect();
+
+            componentInfoCard.style.top = `${rect.bottom - mainCardRect.top + 10}px`;
+            componentInfoCard.style.left = `${rect.left - mainCardRect.left}px`;
+            
+            componentInfoCard.classList.add('visible');
+        }
+
+        // 隐藏组件信息卡片
+        function hideComponentInfo() {
+            componentInfoCard.classList.remove('visible');
+        }
+
+        // 为每个组件添加鼠标事件监听器
+        components.forEach(component => {
+            component.addEventListener('mouseenter', showComponentInfo);
+            component.addEventListener('mouseleave', hideComponentInfo);
+        });
+
+        // 为组件信息卡片添加鼠标事件监听器
+        componentInfoCard.addEventListener('mouseenter', () => {
+            componentInfoCard.classList.add('visible');
+        });
+        componentInfoCard.addEventListener('mouseleave', hideComponentInfo);
+
+        // 保留键盘可访问性
+        labels.forEach(label => {
+            label.setAttribute('tabindex', '0');
+            label.setAttribute('role', 'button');
+            label.setAttribute('aria-haspopup', 'true');
+        });
+
+        // 添加键盘事件监听器
+        svg.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                if (e.target.classList.contains('label')) {
+                    showInfoCard(e);
+                }
+            }
+        });
+
+        // 添加失焦事件监听器
+        svg.addEventListener('blur', (e) => {
+            if (e.target.classList.contains('label')) {
+                hideInfoCard();
+            }
+        });
+
+        // 添加以下代码来阻止默认的鼠标事件
+        components.forEach(component => {
+            component.addEventListener('mousedown', (e) => e.preventDefault());
+        });
+
+        labels.forEach(label => {
+            label.addEventListener('mousedown', (e) => e.preventDefault());
+        });
+
+        // 添加以下代码来阻止 SVG 的默认点击行为
+        svg.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+        });
+    </script>
+</body>
+</html>
