@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Git Workflow Diagram</title>
+    <style>
+        :root {
+            --remote-color: #AED6F1;
+            --repository-color: #AED6F1;
+            --index-color: #AED6F1;
+            --workspace-color: #F9E79F;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f1;
+        }
+        .container {
+            position: relative;
+            width: 90vw;
+            max-width: 800px;
+            height: 80vh;
+            max-height: 600px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .box {
+            position: absolute;
+            width: 120px;
+            height: 60px;
+            border: 2px solid #333;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .box:hover {
+            transform: scale(1.05);
+        }
+        #remote { top: 10%; left: 10%; background-color: var(--remote-color); }
+        #repository { top: 10%; right: 10%; background-color: var(--repository-color); }
+        #index { bottom: 10%; left: 30%; background-color: var(--index-color); }
+        #workspace { bottom: 10%; right: 10%; background-color: var(--workspace-color); }
+        .arrow {
+            position: absolute;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        .arrow:hover {
+            transform: scale(1.1);
+            color: #3498db;
+        }
+        #fetch { top: 15%; left: 35%; }
+        #push { top: 25%; left: 35%; }
+        #pull { top: 35%; left: 35%; }
+        #checkout { right: 25%; top: 40%; }
+        #commit { left: 40%; bottom: 35%; }
+        #add { right: 30%; bottom: 25%; }
+        .card {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            max-width: 300px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: none;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        .card.show {
+            display: block;
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        .close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        #cardTitle {
+            margin-top: 0;
+        }
+        #cardExample {
+            background-color: #f0f0f1;
+            padding: 10px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+        @media (max-width: 600px) {
+            .box {
+                width: 80px;
+                height: 40px;
+                font-size: 12px;
+            }
+            .arrow {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="diagram">
+        <div id="remote" class="box" role="img" aria-label="Remote repository">Remote</div>
+        <div id="repository" class="box" role="img" aria-label="Local repository">Repository</div>
+        <div id="index" class="box" role="img" aria-label="Staging area">Index</div>
+        <div id="workspace" class="box" role="img" aria-label="Working directory">Workspace</div>
+        <div id="fetch" class="arrow" role="button" aria-label="Show information about fetch and clone">fetch/clone</div>
+        <div id="push" class="arrow" role="button" aria-label="Show information about push">push</div>
+        <div id="pull" class="arrow" role="button" aria-label="Show information about pull">pull</div>
+        <div id="checkout" class="arrow" role="button" aria-label="Show information about checkout">checkout</div>
+        <div id="commit" class="arrow" role="button" aria-label="Show information about commit">commit</div>
+        <div id="add" class="arrow" role="button" aria-label="Show information about add">add</div>
+    </div>
+    <div id="card" class="card" role="dialog" aria-labelledby="cardTitle">
+        <span class="close" role="button" aria-label="Close">&times;</span>
+        <h3 id="cardTitle"></h3>
+        <p id="cardContent"></p>
+        <pre id="cardExample"></pre>
+    </div>
+    <script>
+        const gitData = {
+            fetch: {
+                title: "git fetch/clone",
+                content: "Retrieves changes from a remote repository without merging them.",
+                example: "$ git fetch origin\n$ git clone https://github.com/user/repo.git"
+            },
+            push: {
+                title: "git push",
+                content: "Uploads local repository content to a remote repository.",
+                example: "$ git push origin main"
+            },
+            pull: {
+                title: "git pull",
+                content: "Fetches and merges changes from a remote repository to the current branch.",
+                example: "$ git pull origin main"
+            },
+            checkout: {
+                title: "git checkout",
+                content: "Switches branches or restores working tree files.",
+                example: "$ git checkout branch-name\n$ git checkout -b new-branch"
+            },
+            commit: {
+                title: "git commit",
+                content: "Records changes to the repository.",
+                example: "$ git commit -m \"Commit message\""
+            },
+            add: {
+                title: "git add",
+                content: "Adds file contents to the index (staging area).",
+                example: "$ git add filename\n$ git add ."
+            }
+        };
+
+        function showCard(command) {
+            const card = document.getElementById('card');
+            const cardTitle = document.getElementById('cardTitle');
+            const cardContent = document.getElementById('cardContent');
+            const cardExample = document.getElementById('cardExample');
+
+            cardTitle.textContent = gitData[command].title;
+            cardContent.textContent = gitData[command].content;
+            cardExample.textContent = gitData[command].example;
+            card.classList.add('show');
+        }
+
+        function closeCard() {
+            document.getElementById('card').classList.remove('show');
+        }
+
+        document.getElementById('diagram').addEventListener('click', (e) => {
+            if (e.target.classList.contains('arrow')) {
+                showCard(e.target.id);
+            }
+        });
+
+        document.querySelector('.close').addEventListener('click', closeCard);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeCard();
+            }
+        });
+    </script>
+</body>
+</html>

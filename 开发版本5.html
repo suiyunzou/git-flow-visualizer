@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git 工作流程图</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f1;
+        }
+        .container {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            background-color: #fffef7;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+        }
+        .box {
+            position: absolute;
+            width: 120px;
+            height: 60px;
+            border: 2px solid #333;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+        }
+        #remote { top: 50px; left: 50px; background-color: #AED6F1; }
+        #repository { top: 50px; right: 50px; background-color: #AED6F1; }
+        #index { bottom: 50px; left: 250px; background-color: #AED6F1; }
+        #workspace { bottom: 50px; right: 50px; background-color: #F9E79F; width: 140px; }
+        .arrow {
+            position: absolute;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .arrow::before {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-style: solid;
+        }
+        .arrow:hover {
+            color: #3498db;
+        }
+        #fetch { top: 30px; left: 200px; }
+        #fetch::before {
+            top: 20px;
+            left: -30px;
+            border-width: 10px 20px 10px 0;
+            border-color: transparent #333 transparent transparent;
+        }
+        #push { top: 70px; left: 200px; }
+        #push::before {
+            top: 20px;
+            left: 100px;
+            border-width: 10px 0 10px 20px;
+            border-color: transparent transparent transparent #333;
+        }
+        #pull { top: 110px; left: 200px; }
+        #pull::before {
+            top: 20px;
+            left: -30px;
+            border-width: 10px 20px 10px 0;
+            border-color: transparent #333 transparent transparent;
+        }
+        #checkout { right: 200px; top: 150px; }
+        #checkout::before {
+            top: 20px;
+            left: 50px;
+            border-width: 20px 10px 0 10px;
+            border-color: #333 transparent transparent transparent;
+        }
+        #commit { left: 300px; bottom: 150px; }
+        #commit::before {
+            top: -10px;
+            left: 30px;
+            border-width: 0 10px 20px 10px;
+            border-color: transparent transparent #333 transparent;
+        }
+        #add { right: 200px; bottom: 30px; }
+        #add::before {
+            top: 10px;
+            left: -30px;
+            border-width: 10px 20px 10px 0;
+            border-color: transparent #333 transparent transparent;
+        }
+        .card {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 20px;
+            max-width: 300px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: none;
+            z-index: 1000;
+        }
+        .close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="remote" class="box">Remote</div>
+        <div id="repository" class="box">Repository</div>
+        <div id="index" class="box">Index</div>
+        <div id="workspace" class="box">Workspace</div>
+        <div id="fetch" class="arrow" onclick="showCard('fetch')">fetch/clone</div>
+        <div id="push" class="arrow" onclick="showCard('push')">push</div>
+        <div id="pull" class="arrow" onclick="showCard('pull')">pull</div>
+        <div id="checkout" class="arrow" onclick="showCard('checkout')">checkout</div>
+        <div id="commit" class="arrow" onclick="showCard('commit')">commit</div>
+        <div id="add" class="arrow" onclick="showCard('add')">add</div>
+    </div>
+    <div id="card" class="card">
+        <span class="close" onclick="closeCard()">X</span>
+        <h3 id="cardTitle"></h3>
+        <p id="cardContent"></p>
+        <pre id="cardExample"></pre>
+    </div>
+    <script>
+        const gitData = {
+            fetch: {
+                title: "git fetch/clone",
+                content: "从远程仓库获取代码。",
+                example: "$ git fetch origin\n$ git clone https://github.com/user/repo.git"
+            },
+            push: {
+                title: "git push",
+                content: "将本地分支的更新推送到远程仓库。",
+                example: "$ git push origin main"
+            },
+            pull: {
+                title: "git pull",
+                content: "从远程仓库获取并合并更改。",
+                example: "$ git pull origin main"
+            },
+            checkout: {
+                title: "git checkout",
+                content: "切换分支或恢复工作树文件。",
+                example: "$ git checkout branch-name\n$ git checkout -b new-branch"
+            },
+            commit: {
+                title: "git commit",
+                content: "提交暂存的更改。",
+                example: "$ git commit -m \"Commit message\""
+            },
+            add: {
+                title: "git add",
+                content: "将文件添加到暂存区。",
+                example: "$ git add filename\n$ git add ."
+            }
+        };
+
+        function showCard(command) {
+            const card = document.getElementById('card');
+            const cardTitle = document.getElementById('cardTitle');
+            const cardContent = document.getElementById('cardContent');
+            const cardExample = document.getElementById('cardExample');
+
+            cardTitle.textContent = gitData[command].title;
+            cardContent.textContent = gitData[command].content;
+            cardExample.textContent = gitData[command].example;
+            card.style.display = 'block';
+        }
+
+        function closeCard() {
+            document.getElementById('card').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

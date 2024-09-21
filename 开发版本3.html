@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git 常用命令和问题解决方案</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --background-color: #ecf0f1;
+            --text-color: #34495e;
+            --card-background: #ffffff;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --link-color: #e74c3c;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--primary-color);
+        }
+
+        .search-container {
+            margin-bottom: 20px;
+        }
+
+        #search {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid var(--primary-color);
+            border-radius: 5px;
+        }
+
+        .category {
+            margin-bottom: 30px;
+        }
+
+        .category-title {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: var(--secondary-color);
+        }
+
+        .subcategory-title {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+
+        .cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .card {
+            background-color: var(--card-background);
+            border-radius: 5px;
+            box-shadow: var(--card-shadow);
+            padding: 15px;
+            width: calc(33.333% - 20px);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-title {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+
+        .card-content {
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .card-example,
+        .card-solution {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f7f7f7;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .card-solution {
+            background-color: #e8f4fd;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .related-cards {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .related-cards h5 {
+            margin-bottom: 5px;
+            color: var(--secondary-color);
+        }
+
+        .related-cards ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .related-cards li {
+            margin-bottom: 3px;
+        }
+
+        .related-cards a {
+            color: var(--link-color);
+            text-decoration: none;
+        }
+
+        .related-cards a:hover {
+            text-decoration: underline;
+        }
+
+        .card-nav {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .card-nav button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .card-nav button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        @media screen and (max-width: 768px) {
+            .card {
+                width: calc(50% - 20px);
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            .card {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Git 常用命令和问题解决方案</h1>
+        <div class="search-container">
+            <input type="text" id="search" placeholder="搜索 Git 命令或问题...">
+        </div>
+        <div id="content"></div>
+    </div>
+    <script>
+        const gitData = [
+            {
+                category: "常用命令",
+                subcategories: [
+                    {
+                        title: "初始化和配置",
+                        cards: [
+                            {
+                                id: "git-init",
+                                title: "git init",
+                                content: "初始化一个新的 Git 仓库。",
+                                example: "$ git init",
+                                relatedCards: ["git-config", "git-clone"]
+                            },
+                            {
+                                id: "git-config",
+                                title: "git config",
+                                content: "配置 Git 设置。",
+                                example: `$ git config --global user.name "Your Name"
+$ git config --global user.email "your@email.com"`,
+                                relatedCards: ["git-init", "git-clone"]
+                            },
+                            {
+                                id: "git-clone",
+                                title: "git clone",
+                                content: "克隆一个远程仓库到本地。",
+                                example: "$ git clone https://github.com/user/repo.git",
+                                relatedCards: ["git-init", "git-remote"]
+                            }
+                        ]
+                    },
+                    {
+                        title: "基本操作",
+                        cards: [
+                            {
+                                id: "git-add",
+                                title: "git add",
+                                content: "将文件添加到暂存区。",
+                                example: `$ git add filename
+$ git add .`,
+                                relatedCards: ["git-commit", "git-status"]
+                            },
+                            {
+                                id: "git-commit",
+                                title: "git commit",
+                                content: "提交暂存的更改。",
+                                example: `$ git commit -m "Commit message"`,
+                                relatedCards: ["git-add", "git-push"]
+                            },
+                            {
+                                id: "git-status",
+                                title: "git status",
+                                content: "查看仓库状态。",
+                                example: "$ git status",
+                                relatedCards: ["git-add", "git-commit"]
+                            }
+                        ]
+                    },
+                    {
+                        title: "分支操作",
+                        cards: [
+                            {
+                                id: "git-branch",
+                                title: "git branch",
+                                content: "列出、创建或删除分支。",
+                                example: `$ git branch
+$ git branch new-branch
+$ git branch -d branch-name`,
+                                relatedCards: ["git-checkout", "git-merge"]
+                            },
+                            {
+                                id: "git-checkout",
+                                title: "git checkout",
+                                content: "切换分支或恢复工作树文件。",
+                                example: `$ git checkout branch-name
+$ git checkout -b new-branch`,
+                                relatedCards: ["git-branch", "git-merge"]
+                            },
+                            {
+                                id: "git-merge",
+                                title: "git merge",
+                                content: "合并一个或多个分支到当前分支。",
+                                example: "$ git merge branch-name",
+                                relatedCards: ["git-branch", "git-checkout"]
+                            }
+                        ]
+                    },
+                    {
+                        title: "远程仓库操作",
+                        cards: [
+                            {
+                                id: "git-remote",
+                                title: "git remote",
+                                content: "管理远程仓库。",
+                                example: `$ git remote add origin https://github.com/user/repo.git
+$ git remote -v`,
+                                relatedCards: ["git-push", "git-pull"]
+                            },
+                            {
+                                id: "git-push",
+                                title: "git push",
+                                content: "将本地分支的更新推送到远程仓库。",
+                                example: "$ git push origin main",
+                                relatedCards: ["git-remote", "git-pull"]
+                            },
+                            {
+                                id: "git-pull",
+                                title: "git pull",
+                                content: "从远程仓库获取并合并更改。",
+                                example: "$ git pull origin main",
+                                relatedCards: ["git-remote", "git-push"]
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                category: "常见问题和解决方案",
+                subcategories: [
+                    {
+                        title: "合并和冲突",
+                        cards: [
+                            {
+                                id: "merge-conflicts",
+                                title: "合并冲突 (Merge conflicts)",
+                                content: "当两个分支对同一文件的相同部分进行了不同的修改时，Git 无法自动解决冲突。",
+                                solution: `1. 打开冲突文件，手动解决冲突
+2. 删除冲突标记 (<<<<<<, =======, >>>>>>)
+3. 保存文件
+4. git add <conflicted-file>
+5. git commit -m "Resolved merge conflict"`,
+                                relatedCards: ["git-merge", "rebase-conflicts"]
+                            },
+                            {
+                                id: "rebase-conflicts",
+                                title: "Rebase 冲突",
+                                content: "在进行 rebase 操作时可能会遇到复杂的冲突情况。",
+                                solution: `1. 解决每个提交的冲突
+2. git add <resolved-files>
+3. git rebase --continue
+4. 如果遇到问题，可以使用 git rebase --abort 中止操作`,
+                                relatedCards: ["merge-conflicts", "git-rebase"]
+                            }
+                        ]
+                    },
+                    {
+                        title: "提交问题",
+                        cards: [
+                            {
+                                id: "wrong-branch-commit",
+                                title: "提交到错误的分支",
+                                content: "开发者可能会不小心将代码提交到了错误的分支上。",
+                                solution: `1. 切换到正确的分支：git checkout correct-branch
+2. 复制提交：git cherry-pick wrong-branch
+3. 删除错误分支的提交：
+   git checkout wrong-branch
+   git reset --hard HEAD~1 (注意：这会丢失最后一次提交)`,
+                                relatedCards: ["git-branch", "git-checkout"]
+                            },
+                            {
+                                id: "undo-last-commit",
+                                title: "撤销上一次提交",
+                                content: "如果发现刚刚的提交有误，需要撤销或修改最近的提交。",
+                                solution: `修改最后一次提交：
+git commit --amend
+
+完全撤销最后一次提交：
+git reset --hard HEAD~1`,
+                                relatedCards: ["git-commit", "git-reset"]
+                            },
+                            {
+                                id: "wrong-commit-message",
+                                title: "提交信息写错",
+                                content: "提交后发现 commit message 有误，需要修改。",
+                                solution: `修改最后一次提交的信息：
+git commit --amend -m "New commit message"
+
+修改历史提交信息（谨慎使用）：
+git rebase -i HEAD~n
+将要修改的提交前的 'pick' 改为 'reword'`,
+                                relatedCards: ["git-commit", "git-rebase"]
+                            }
+                        ]
+                    },
+                    {
+                        title: "数据丢失和恢复",
+                        cards: [
+                            {
+                                id: "lost-uncommitted-changes",
+                                title: "丢失未提交的更改",
+                                content: "意外切换分支或执行其他操作，导致未提交的更改丢失。",
+                                solution: `1. 检查 git reflog 查看最近的操作
+2. 找到丢失更改前的 commit hash
+3. git reset --hard <commit-hash> 恢复到该状态
+注意：这可能不适用于所有情况，预防很重要`,
+                                relatedCards: ["git-reflog", "git-reset"]
+                            },
+                            {
+                                id: "recover-deleted-branch",
+                                title: "删除分支后找不到提交",
+                                content: "删除分支后，可能需要恢复之前的某些提交。",
+                                solution: `1. 使用 git reflog 查看所有操作历史
+2. 找到被删除分支的最后一个提交
+3. git checkout -b new-branch <commit-hash> 创建新分支`,
+                                relatedCards: ["git-branch", "git-reflog"]
+                            },
+                            {
+                                id: "recover-deleted-file",
+                                title: "误删文件后恢复",
+                                content: "不小心删除了文件，需要从 Git 历史中恢复。",
+                                solution: `1. 如果文件已被 Git 跟踪：
+   git checkout -- <file-name>
+
+2. 如果文件未被跟踪，但有最近的提交：
+   git log
+   找到包含该文件的最近提交
+   git checkout <commit-hash> -- <file-name>`,
+                                relatedCards: ["git-checkout", "git-log"]
+                            }
+                        ]
+                    },
+                    {
+                        title: "其他常见问题",
+                        cards: [
+                            {
+                                id: "large-file-handling",
+                                title: "大文件处理问题",
+                                content: "Git 不适合处理大文件，尝试提交大文件可能会导致仓库膨胀。",
+                                solution: `1. 使用 Git LFS (Large File Storage) 扩展
+2. 配置 .gitattributes 文件指定大文件
+3. 或考虑将大文件存储在外部存储系统中`,
+                                relatedCards: ["git-lfs", "gitignore"]
+                            },
+                            {
+                                id: "repo-sync-issues",
+                                title: "远程仓库与本地仓库不同步",
+                                content: "本地和远程仓库的历史 diverge，导致 push 或 pull 操作失败。",
+                                solution: `1. 先拉取远程更改：git fetch origin
+2. 查看差异：git log --oneline --graph --all
+3. 选择合并或变基：
+   合并：git merge origin/main
+   变基：git rebase origin/main
+4. 解决任何冲突
+5. 推送更改：git push origin main`,
+                                relatedCards: ["git-fetch", "git-merge", "git-rebase"]
+                            },
+                            {
+                                id: "detached-head",
+                                title: "意外的 detached HEAD 状态",
+                                content: "切换到特定的提交时，可能会进入 detached HEAD 状态。",
+                                solution: `1. 如果想保留在 detached HEAD 状态下的更改：
+   git branch temp-branch
+   git checkout temp-branch
+
+2. 如果不需要保留更改，直接切回主分支：
+   git checkout main`,
+                                relatedCards: ["git-checkout", "git-branch"]
+                            },
+                            {
+                                id: "gitignore-not-working",
+                                title: "忽略文件不生效",
+                                content: ".gitignore 文件设置不正确或已经跟踪了应该被忽略的文件。",
+                                solution: `1. 确保 .gitignore 文件格式正确
+2. 对于已经被跟踪的文件：
+   git rm --cached <file-name>
+3. 更新 .gitignore 文件
+4. 提交更改`,
+                                relatedCards: ["git-rm", "gitignore"]
+                            },
+                            {
+                                id: "large-repo-history",
+                                title: "仓库历史过大",
+                                content: "长期累积的提交导致仓库体积变得非常大，影响克隆和操作速度。",
+                                solution: `1. 使用浅克隆：git clone --depth 1 <repo-url>
+2. 考虑使用 Git LFS 管理大文件
+3. 定期进行仓库清理：
+   git gc --aggressive
+   git prune`,
+                                relatedCards: ["git-clone", "git-lfs", "git-gc"]
+                            }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        function renderContent() {
+            const contentElement = document.getElementById('content');
+            contentElement.innerHTML = '';
+
+            gitData.forEach(category => {
+                const categoryElement = document.createElement('div');
+                categoryElement.classList.add('category');
+
+                const categoryTitle = document.createElement('h2');
+                categoryTitle.classList.add('category-title');
+                categoryTitle.textContent = category.category;
+                categoryElement.appendChild(categoryTitle);
+
+                category.subcategories.forEach(subcategory => {
+                    const subcategoryElement = document.createElement('div');
+                    subcategoryElement.classList.add('subcategory');
+
+                    const subcategoryTitle = document.createElement('h3');
+                    subcategoryTitle.classList.add('subcategory-title');
+                    subcategoryTitle.textContent = subcategory.title;
+                    subcategoryElement.appendChild(subcategoryTitle);
+
+                    const cardsElement = document.createElement('div');
+                    cardsElement.classList.add('cards');
+
+                    subcategory.cards.forEach(card => {
+                        const cardElement = document.createElement('div');
+                        cardElement.classList.add('card');
+                        cardElement.id = card.id;
+
+                        const cardTitle = document.createElement('h4');
+                        cardTitle.classList.add('card-title');
+                        cardTitle.textContent = card.title;
+                        cardElement.appendChild(cardTitle);
+
+                        const cardContent = document.createElement('p');
+                        cardContent.classList.add('card-content');
+                        cardContent.textContent = card.content;
+                        cardElement.appendChild(cardContent);
+
+                        if (card.example) {
+                            const cardExample = document.createElement('pre');
+                            cardExample.classList.add('card-example');
+                            cardExample.textContent = card.example;
+                            cardElement.appendChild(cardExample);
+                        }
+
+                        if (card.solution) {
+                            const cardSolution = document.createElement('pre');
+                            cardSolution.classList.add('card-solution');
+                            cardSolution.textContent = card.solution;
+                            cardElement.appendChild(cardSolution);
+                        }
+
+                        if (card.relatedCards && card.relatedCards.length > 0) {
+                            const relatedCardsElement = document.createElement('div');
+                            relatedCardsElement.classList.add('related-cards');
+                            const relatedCardsTitle = document.createElement('h5');
+                            relatedCardsTitle.textContent = '相关卡片：';
+                            relatedCardsElement.appendChild(relatedCardsTitle);
+
+                            const relatedCardsList = document.createElement('ul');
+                            card.relatedCards.forEach(relatedCardId => {
+                                const relatedCard = findCardById(relatedCardId);
+                                if (relatedCard) {
+                                    const listItem = document.createElement('li');
+                                    const link = document.createElement('a');
+                                    link.href = `#${relatedCardId}`;
+                                    link.textContent = relatedCard.title;
+                                    link.addEventListener('click', (e) => {
+                                        e.preventDefault();
+                                        document.getElementById(relatedCardId).scrollIntoView({ behavior: 'smooth' });
+                                    });
+                                    listItem.appendChild(link);
+                                    relatedCardsList.appendChild(listItem);
+                                }
+                            });
+                            relatedCardsElement.appendChild(relatedCardsList);
+                            cardElement.appendChild(relatedCardsElement);
+                        }
+
+                        const cardNav = document.createElement('div');
+                        cardNav.classList.add('card-nav');
+                        const prevButton = document.createElement('button');
+                        prevButton.textContent = '上一个';
+                        prevButton.addEventListener('click', () => navigateCards(card.id, 'prev'));
+                        const nextButton = document.createElement('button');
+                        nextButton.textContent = '下一个';
+                        nextButton.addEventListener('click', () => navigateCards(card.id, 'next'));
+                        cardNav.appendChild(prevButton);
+                        cardNav.appendChild(nextButton);
+                        cardElement.appendChild(cardNav);
+
+                        cardsElement.appendChild(cardElement);
+                    });
+
+                    subcategoryElement.appendChild(cardsElement);
+                    categoryElement.appendChild(subcategoryElement);
+                });
+
+                contentElement.appendChild(categoryElement);
+            });
+        }
+
+        function findCardById(id) {
+            for (const category of gitData) {
+                for (const subcategory of category.subcategories) {
+                    const card = subcategory.cards.find(card => card.id === id);
+                    if (card) return card;
+                }
+            }
+            return null;
+        }
+
+        function navigateCards(currentId, direction) {
+            const allCards = gitData.flatMap(category => 
+                category.subcategories.flatMap(subcategory => subcategory.cards)
+            );
+            const currentIndex = allCards.findIndex(card => card.id === currentId);
+            let targetIndex;
+
+            if (direction === 'prev') {
+                targetIndex = (currentIndex - 1 + allCards.length) % allCards.length;
+            } else {
+                targetIndex = (currentIndex + 1) % allCards.length;
+            }
+
+            const targetCard = allCards[targetIndex];
+            document.getElementById(targetCard.id).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function filterContent(searchTerm) {
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(card => {
+                const title = card.querySelector('.card-title').textContent.toLowerCase();
+                const content = card.querySelector('.card-content').textContent.toLowerCase();
+                const example = card.querySelector('.card-example')?.textContent.toLowerCase() || '';
+                const solution = card.querySelector('.card-solution')?.textContent.toLowerCase() || '';
+
+                if (title.includes(searchTerm) || content.includes(searchTerm) || example.includes(searchTerm) || solution.includes(searchTerm)) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderContent();
+
+            const searchInput = document.getElementById('search');
+            searchInput.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                filterContent(searchTerm);
+            });
+        });
+    </script>
+</body>
+</html>
