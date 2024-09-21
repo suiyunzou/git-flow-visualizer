@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git工作流程图</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --background-color: #ecf0f1;
+            --text-color: #34495e;
+            --card-background: #ffffff;
+            --card-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        svg {
+            width: 100%;
+            height: auto;
+            max-height: 70vh;
+        }
+        .component {
+            stroke: #000;
+            stroke-width: 2;
+        }
+        .remote, .repository, .index { fill: #E6F3FF; } /* 浅蓝色 */
+        .workspace { fill: #FFFACD; } /* 浅黄色 */
+        .arrow {
+            fill: none;
+            stroke: #666;
+            stroke-width: 1.5; /* 减小箭头线条宽度 */
+            marker-end: url(#arrowhead);
+            transition: stroke 0.3s;
+        }
+        .arrow:hover { stroke: #000; }
+        .label {
+            font-size: 12px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .card {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--card-background);
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+            display: none;
+            max-width: 400px;
+            width: 90%;
+            z-index: 10;
+        }
+        .card h3 { 
+            margin-top: 0; 
+            color: var(--primary-color);
+        }
+        .card p { margin-bottom: 10px; }
+        .card pre {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        @media (max-width: 600px) {
+            .container { padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <svg viewBox="0 0 800 300" aria-labelledby="title" role="img">
+            <title id="title">Git工作流程图</title>
+            <defs>
+                <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                    <polygon points="0 0, 8 3, 0 6" fill="#666" />
+                </marker>
+            </defs>
+            
+            <!-- 远程仓库 - 大圆柱体 -->
+            <path class="component remote" d="M20,80 Q70,50 120,80 V220 Q70,250 20,220 V80 Z" />
+            <ellipse class="component remote" cx="70" cy="80" rx="50" ry="20" />
+            <text x="70" y="160" text-anchor="middle">Remote</text>
+            
+            <!-- 本地仓库 - 稍小的圆柱体 -->
+            <path class="component repository" d="M220,90 Q260,65 300,90 V210 Q260,235 220,210 V90 Z" />
+            <ellipse class="component repository" cx="260" cy="90" rx="40" ry="15" />
+            <text x="260" y="160" text-anchor="middle">Repository</text>
+            
+            <!-- 索引/暂存区 - 小圆柱体 -->
+            <path class="component index" d="M420,110 Q450,95 480,110 V190 Q450,205 420,190 V110 Z" />
+            <ellipse class="component index" cx="450" cy="110" rx="30" ry="10" />
+            <text x="450" y="160" text-anchor="middle">Index</text>
+            
+            <!-- 工作区 - 波浪底边的矩形 -->
+            <path class="component workspace" d="M620,100 H720 V190 Q705,200 690,190 Q675,180 660,190 Q645,200 630,190 Q615,180 620,190 V100 Z" />
+            <text x="670" y="160" text-anchor="middle">Workspace</text>
+            
+            <!-- 箭头和标签 -->
+            <path class="arrow" d="M130 140 H210" />
+            <text class="label" x="170" y="130" text-anchor="middle" data-operation="fetch">fetch/clone</text>
+            
+            <path class="arrow" d="M310 140 H410" />
+            <text class="label" x="360" y="130" text-anchor="middle" data-operation="commit">commit</text>
+            
+            <path class="arrow" d="M490 140 H610" />
+            <text class="label" x="550" y="130" text-anchor="middle" data-operation="checkout">checkout</text>
+            
+            <path class="arrow" d="M610 170 H490" />
+            <text class="label" x="550" y="190" text-anchor="middle" data-operation="add">add</text>
+            
+            <path class="arrow" d="M210 170 H130" />
+            <text class="label" x="170" y="190" text-anchor="middle" data-operation="push">push</text>
+            
+            <path class="arrow" d="M120 200 Q270 250 610 200" />
+            <text class="label" x="370" y="240" text-anchor="middle" data-operation="pull">pull</text>
+        </svg>
+        <div id="card" class="card" role="dialog" aria-modal="true">
+            <button class="close-btn" aria-label="关闭">&times;</button>
+            <h3 id="card-title"></h3>
+            <p id="card-description"></p>
+            <pre id="card-example"></pre>
+        </div>
+    </div>
+    <script>
+        const operations = {
+            fetch: {
+                name: "Fetch/Clone",
+                description: "从远程仓库获取最新的代码",
+                example: "git fetch 或 git clone <url>"
+            },
+            checkout: {
+                name: "Checkout",
+                description: "切换分支或恢复工作区文件",
+                example: "git checkout <branch>"
+            },
+            add: {
+                name: "Add",
+                description: "将文件添加到暂存区",
+                example: "git add <file>"
+            },
+            commit: {
+                name: "Commit",
+                description: "将暂存区的改动提交到本地仓库",
+                example: "git commit -m '提交信息'"
+            },
+            push: {
+                name: "Push",
+                description: "将本地的提交推送到远程仓库",
+                example: "git push origin <branch>"
+            },
+            pull: {
+                name: "Pull",
+                description: "从远程仓库拉取并合并到本地",
+                example: "git pull origin <branch>"
+            }
+        };
+
+        const card = document.getElementById('card');
+        const svg = document.querySelector('svg');
+        const closeBtn = document.querySelector('.close-btn');
+
+        svg.addEventListener('click', (e) => {
+            if (e.target.classList.contains('label')) {
+                const operation = e.target.dataset.operation;
+                const info = operations[operation];
+                document.getElementById('card-title').textContent = info.name;
+                document.getElementById('card-description').textContent = info.description;
+                document.getElementById('card-example').textContent = info.example;
+                card.style.display = 'block';
+            }
+        });
+
+        closeBtn.addEventListener('click', () => {
+            card.style.display = 'none';
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && card.style.display === 'block') {
+                card.style.display = 'none';
+            }
+        });
+
+        // 添加键盘可访问性
+        svg.querySelectorAll('.label').forEach(label => {
+            label.setAttribute('tabindex', '0');
+            label.setAttribute('role', 'button');
+            label.setAttribute('aria-haspopup', 'true');
+        });
+
+        svg.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                e.target.click();
+            }
+        });
+    </script>
+</body>
+</html>
