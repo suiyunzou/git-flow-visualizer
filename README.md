@@ -50,6 +50,17 @@
 - 优化移动设备上的用户体验
 - 集成实时 Git 命令演示功能
 
+## 展示示例
+<img src="./git-workflow01.jpg" alt="Git 工作流程示例" width="800">
+<img src="./git-workflow02.jpg" alt="Git 工作流程示例" width="800">
+<img src="./git-workflow03.jpg" alt="Git 工作流程示例" width="800">
+<img src="./balloon01.jpg" alt="漂浮的气球" width="800">
+<img src="./balloon02.jpg" alt="漂浮的气球" width="800">
+
+
+
+
+
 ## 贡献
 
 欢迎提交 Issue 或 Pull Request 来帮助改进这个项目。请确保您的贡献符合项目的设计理念和编码标准。
