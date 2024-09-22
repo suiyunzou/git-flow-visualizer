@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>天空中的气球</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        .sky {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #4A90E2, #87CEEB);
+            position: relative;
+            overflow: hidden;
+        }
+        .cloud {
+            position: absolute;
+            width: 200px;
+            height: 60px;
+            background: #fff;
+            border-radius: 200px;
+            filter: blur(5px);
+        }
+        .cloud:before,
+        .cloud:after {
+            content: '';
+            position: absolute;
+            background: #fff;
+            width: 100px;
+            height: 80px;
+            top: -15px;
+            left: 10px;
+            border-radius: 100px;
+            transform: rotate(30deg);
+        }
+        .cloud:after {
+            width: 120px;
+            height: 120px;
+            top: -55px;
+            left: auto;
+            right: 15px;
+        }
+        .balloon {
+            position: absolute;
+            width: 60px;
+            height: 75px;
+            border-radius: 50% 50% 50% 50% / 55% 55% 45% 45%;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            z-index: 10;
+            opacity: 0.7;
+        }
+        .balloon::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: inherit;
+            box-shadow: inset -15px -15px 40px rgba(0,0,0,0.3),
+                        inset 15px 15px 40px rgba(255,255,255,0.3);
+        }
+        .balloon::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            width: 2px;
+            height: 25px;
+            background-color: #888;
+            transform: translateX(-50%);
+        }
+        .balloon:hover {
+            transform: scale(1.1);
+        }
+        .quote-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .quote-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .quote {
+            color: #fff;
+            font-size: 24px;
+            text-align: center;
+            max-width: 80%;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sky" id="sky">
+        <!-- 云朵和气球将通过 JavaScript 动态添加 -->
+    </div>
+    <div class="quote-overlay">
+        <div class="quote"></div>
+    </div>
+
+    <script>
+        const sky = document.getElementById('sky');
+        const quoteOverlay = document.querySelector('.quote-overlay');
+        const quoteElement = document.querySelector('.quote');
+
+        // 创建云朵
+        function createCloud() {
+            const cloud = document.createElement('div');
+            cloud.className = 'cloud';
+            const size = Math.random() * 100 + 150; // 增大云的整体尺寸
+            cloud.style.width = `${size}px`;
+            cloud.style.height = `${size * 0.3}px`;
+            cloud.style.left = `${Math.random() * 100}%`;
+            cloud.style.top = `${Math.random() * 30}%`; // 将云朵限制在天空的上部分
+            cloud.style.opacity = Math.random() * 0.3 + 0.7; // 随机透明度
+            cloud.style.transform = `scale(${Math.random() * 0.5 + 0.5})`; // 随机缩放
+
+            sky.appendChild(cloud);
+        }
+
+        // 创建多个云朵
+        for (let i = 0; i < 15; i++) { // 增加云的数量
+            createCloud();
+        }
+
+        // 添加云朵的缓慢移动
+        function moveCloud(cloud) {
+            let position = parseFloat(cloud.style.left);
+            const speed = Math.random() * 0.05 + 0.01;
+            
+            function animate() {
+                position += speed;
+                if (position > 100) {
+                    position = -20;
+                }
+                cloud.style.left = `${position}%`;
+                requestAnimationFrame(animate);
+            }
+            
+            animate();
+        }
+
+        // 为每朵云添加移动动画
+        document.querySelectorAll('.cloud').forEach(moveCloud);
+
+        // 创建多个气球
+        const balloonCount = 5;
+        const balloons = [];
+        const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f7d794', '#786fa6'];
+
+        for (let i = 0; i < balloonCount; i++) {
+            const balloon = document.createElement('div');
+            balloon.className = 'balloon';
+            balloon.style.backgroundColor = colors[i % colors.length];
+            sky.appendChild(balloon);
+            balloons.push({
+                element: balloon,
+                x: Math.random() * (window.innerWidth - 60),
+                y: Math.random() * (window.innerHeight - 75),
+                dx: (Math.random() - 0.5) * 0.5,
+                dy: (Math.random() - 0.5) * 0.5
+            });
+        }
+
+        function animateBalloons() {
+            balloons.forEach(balloon => {
+                balloon.x += balloon.dx;
+                balloon.y += balloon.dy;
+
+                if (balloon.x < 0 || balloon.x > window.innerWidth - 60) balloon.dx = -balloon.dx;
+                if (balloon.y < 0 || balloon.y > window.innerHeight - 75) balloon.dy = -balloon.dy;
+
+                balloon.element.style.left = `${balloon.x}px`;
+                balloon.element.style.top = `${balloon.y}px`;
+            });
+
+            requestAnimationFrame(animateBalloons);
+        }
+
+        animateBalloons();
+
+        // 双击事件
+        balloons.forEach(balloon => {
+            balloon.element.addEventListener('dblclick', showQuote);
+        });
+
+        // 点击罩层关闭
+        quoteOverlay.addEventListener('click', hideQuote);
+
+        function showQuote() {
+            const quotes = [
+                "反者道之动，弱者道之用",
+                "真正的力量往往来自内心的平静和坚定",
+                "在追求利益的过程中,不要忘记保持人性的温度",
+                "真相有时比谎言更难以接受,但它是通向自由的唯一道路",
+                "权力和责任应当如影随形,缺一不可",
+                "金钱可以改变一个人的处境,但无法改变一个人的本质",
+                "真正的智慧不在于掌握知识,而在于理解生命的本质",
+                "在混沌中寻找秩序,在黑暗中坚持光明,这才是生命的意义",
+                "救赎往往来自于自我的觉醒,而非外部的力量",
+                "真正的英雄不是不知畏惧,而是在畏惧中依然前行",
+                "世界的复杂性往往超出我们的想象,保持开放和谦逊的态度至关重要"
+            ];
+            const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+            quoteElement.textContent = randomQuote;
+            quoteOverlay.classList.add('active');
+        }
+
+        function hideQuote() {
+            quoteOverlay.classList.remove('active');
+        }
+    </script>
+</body>
+</html>
